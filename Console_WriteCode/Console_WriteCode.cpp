@@ -24,23 +24,24 @@ int main()
 		{
 			sscanf_s(buff, "%lu", &tmp);
 			printf("%lu\n\n\t", tmp);
-			BYTE* by = new BYTE[tmp], * p = by,
-				left = 'A', num = '0';
-			for (DWORD i = tmp/2; i >0; i--)
+			char buf[250], * str = new char[tmp];
+			ZeroMemory(str, tmp);
+			DWORD i = 1, sLen = 0, len;
+			while (true)
 			{
-				*p = left;
-				p++;
-				*p = num;
-				p++;
-				printf("%c%c", left, num);
-				if (num++ == '9')
-				{
-					left++;
-					num = '0';
-				}
+				wsprintfA(buf, "A%lu", i++);
+				printf("%s", buf);
+
+				len = strlen(buf);
+				sLen += len;
+
+				if (sLen >= tmp)
+					break;
+
+				strcat_s(str, tmp, buf);
 			}
 			printf("\n\n");
-			delete[] by;
+			delete[] str;
 		}
 	} while (true);
 }
